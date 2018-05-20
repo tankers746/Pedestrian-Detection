@@ -7,12 +7,13 @@ close all;
 for ii = 1 : length(files)
     fileName = [annotDir files(ii).name];
     record = PASreadrecord(fileName);
-    I = imread([baseDir record.imgname]);
+    imshow([baseDir record.imgname]); hold on;
     for jj = 1 : length(record.objects)
         bbox = record.objects(jj).bbox;
         bbox(3:4) = bbox(3:4) - bbox(1:2);
-        cropped_image = imcrop(I, bbox);
-        imwrite(cropped_image, strcat('C:\cropped\', files(ii).name, num2str(jj),'.png'));
+        rect = rectangle('Position', bbox, 'EdgeColor','g','LineWidth',2);
+        cropped_image = imcrop([baseDir record.imgname], rect);
+        imwrite(cropped_image,record.imgname+ )
     end
     hold off;    
     pause(0.5);
