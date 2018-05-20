@@ -1,0 +1,27 @@
+%% 
+baseDir = 'C:\Users\Tom\OneDrive\Documents\CITS4402\Pedestrian-Detection\';
+annotDir = [baseDir 'PennFudanPed\Annotation\'];
+
+files = dir(annotDir); files(1:2) = [];
+close all;
+for ii = 1 : length(files)
+    fileName = [annotDir files(ii).name];
+    record = PASreadrecord(fileName);
+    I = imread([baseDir record.imgname]);
+    [height, width, depth] = size(I);
+    for jj = 1 : length(record.objects)
+        bbox = record.objects(jj).bbox;
+        bbox(3:4) = bbox(3:4) - bbox(1:2);
+        if(bbox(3) >= 50)
+            new_height = bbox(3) * 3;
+            height_diff = bbox(4) - new_height;
+            bbox(2) = height_diff/2;
+            bbox(4) = new_height;
+            cropped_image = imcrop(I, bbox);
+            resized = imresize(cropped_image, [150, 150]);
+            imwrite(resized, strcat('C:\cropped\', files(ii).name, num2str(jj),'.png'));
+        end
+    end
+    hold off;    
+    pause(0.5);
+end
