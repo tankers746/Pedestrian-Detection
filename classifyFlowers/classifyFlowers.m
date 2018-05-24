@@ -1,3 +1,6 @@
+% Setup MatConVent
+run('../matconvnet/matlab/vl_setupnn');
+
 %% Image Category Classification Using Deep Learning
 % This example shows how to use a pre-trained Convolutional Neural Network
 % (CNN) as a feature extractor for training an image category classifier. 
@@ -9,12 +12,12 @@
 clear, close all
 
 %% Load Pre-trained CNN
-net = load('C:\Users\Tom\Documents\GitHub\Pedestrian-Detection\imagenet-vgg-f.mat');
+net = load('../imagenet-vgg-f.mat');
 convnet = vl_simplenn_tidy(net) ;
 imageSize = net.meta.inputs.size;
 %% Load Images
 
-imds = imageDatastore(fullfile('./', {'positive', 'negative'}), ...
+imds = imageDatastore(fullfile('../', {'positive', 'negative'}), ...
     'LabelSource', 'foldernames');
 imds.ReadFcn = @(filename)readAndPreprocessImage(filename, imageSize);
 

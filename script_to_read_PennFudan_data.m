@@ -1,5 +1,5 @@
 %% 
-baseDir = 'C:\EVERYTHING\TEACHING\CITS4402-Computer-Vision\2017_Sem1\2017project\Data_toolkit\';
+baseDir = '\\uniwa.uwa.edu.au\userhome\Students3\21490093\My Documents\CITS4402\Pedestrian-Detection\';
 annotDir = [baseDir 'PennFudanPed\Annotation\'];
 
 files = dir(annotDir); files(1:2) = [];
