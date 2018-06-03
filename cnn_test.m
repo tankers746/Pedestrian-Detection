@@ -72,3 +72,6 @@ confMat = bsxfun(@rdivide,confMat,sum(confMat,2))
  
 % Display the mean accuracy
 mean(diag(confMat))
+
+%save classifier to disk
+save('classifier.mat','classifier');

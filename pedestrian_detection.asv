@@ -53,15 +53,8 @@ function pedestrian_detection_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to pedestrian_detection (see VARARGIN)
 
 % Choose default command line output for pedestrian_detection
-run('./matconvnet/matlab/vl_setupnn');
-%Load the pre-trained net
-handles.net = load('imagenet-vgg-f.mat');
-handles.net = vl_simplenn_tidy(handles.net) ;
- 
-%Remove the last layer (softmax layer)
-handles.net.layers = handles.net.layers(1 : end - 1);
 handles.output = hObject;
-handles.classifier = load('.\classifier.mat');
+handles.classifier = load('classifier.mat');
 
 
 % Update handles structure
@@ -117,25 +110,25 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    im = handles.image; % note: 0-255 range
+
+im = single(); % note: 0-255 range
+
 % Step 2. Detect ROI          % Convert to gray for detection
-    [bboxes, flow] = findPet(rgb2gray(im),opticalFlowFarneback);   % Find bounding boxes
-    if ~isempty(bboxes)
-        img = zeros([handles.net.meta.normalization.imageSize 3 size(bboxes,1)]);
-        for ii = 1:size(bboxes,1)
-            test = imresize(imcrop(im,bboxes(ii,:)),handles.net.meta.normalization.imageSize(1:2));
-            figure; imshow(test);
-            % Step 3: Extract image features and predict label
-            feats = vl_simplenn(handles.net, test) ;
-            imageFeatures(:) = squeeze(feats(end).x);
-            label = predict(handles.classifier, imageFeatures);
+[bboxes, flow] = findPet(rgb2gray(im),opticalFlowFarneback);   % Find bounding boxes
+if ~isempty(bboxes)
+    img = zeros([net.meta.normalization.imageSize 3 size(bboxes,1)]);
+    for ii = 1:size(bboxes,1)
+        img(:,:,:,ii) = imresize(imcrop(im,bboxes(ii,:)),net.meta.normalization.imageSize(1:2));
+        % Step 3: Extract image features and predict label
+        feats = vl_simplenn(net, img(:,:,:,ii)) ;
+        imageFeatures(:) = squeeze(feats(end).x);
+        label = predict(classifier, imageFeatures);
 
-            % Step 4: Annotation
-            handles.image = insertObjectAnnotation(handles.image,'Rectangle',bboxes(ii,:),cellstr(label),'FontSize',40);
+        % Step 4: Annotation
+        im = insertObjectAnnotation(im,'Rectangle',bboxes(ii,:),cellstr(label),'FontSize',40);
 
-        end
     end
-    imshow(handles.image);
+end
 
 
 

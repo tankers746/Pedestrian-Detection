@@ -24,25 +24,13 @@ minSetCount = min(tbl{:,2});
 % Use splitEachLabel method to trim the set.
 imds = splitEachLabel(imds, minSetCount, 'randomize');
 
-% Notice that each set now has exactly the same number of images.
-countEachLabel(imds)
-
-%% Pre-process Images For CNN
-% |convnet| can only process RGB images that are 227-by-227.
-% To avoid re-saving all the images to this format, setup the |imds|
-% read function, |imds.ReadFcn|, to pre-process images on-the-fly.
-% The |imds.ReadFcn| is called every time an image is read from the
-% |ImageDatastore|.
-%
-% Set the ImageDatastore ReadFcn
-
 %% Divide data into training and testing sets
 [trainingSet, testSet] = splitEachLabel(imds, 0.3, 'randomize');
 
 
-trainingFeatures = zeros(1000,length(trainingSet));
-for i = 1 : length(trainingSet)
-    waitbar (i/ length(trainingSet));
+trainingFeatures = zeros(1000,length(trainingSet.Files));
+for i = 1 : length(trainingSet.Files)
+    waitbar (i/ length(trainingSet.Files));
      
     % Preprocess the data and get it ready for the CNN
     im = readimage(trainingSet, i);
@@ -52,12 +40,12 @@ for i = 1 : length(trainingSet)
  
     % run the CNN to compute the features
     feats = vl_simplenn(net, im_) ;
-    trainingFeatures(i,: = squeeze(feats(end).x);
+    trainingFeatures(:,i) = squeeze(feats(end).x);
 end
 
-testFeatures = zeros(1000,length(testSet));
-for i = 1 : length(testSet)
-    waitbar (i/ length(testSet));
+testFeatures = zeros(1000,length(testSet.Files));
+for i = 1 : length(testSet.Files)
+    waitbar (i/ length(testSet.Files));
      
     % Preprocess the data and get it ready for the CNN
     im = readimage(testSet, i);
@@ -67,7 +55,7 @@ for i = 1 : length(testSet)
  
     % run the CNN to compute the features
     feats = vl_simplenn(net, im_) ;
-    testFeatures(i) = squeeze(feats(end).x);
+    testFeatures(:,i) = squeeze(feats(end).x);
 end
  
 %% Classifier training
@@ -84,3 +72,30 @@ confMat = bsxfun(@rdivide,confMat,sum(confMat,2))
  
 % Display the mean accuracy
 mean(diag(confMat))
+
+
+%% Test it on an unseen image
+[file, folder] = uigetfile();
+filePath = fullfile(folder, file);
+im =  imread(filePath);  
+im_ = single(im); % note: 0-255 range
+
+% Step 2. Detect ROI          % Convert to gray for detection
+[bboxes, flow] = findPet(im_,opticFlow);   % Find bounding boxes
+if ~isempty(bboxes)
+    img = zeros([net.meta.normalization.imageSize 3 size(bboxes,1)]);
+    for ii = 1:size(bboxes,1)
+        img(:,:,:,ii) = imresize(imcrop(im,bboxes(ii,:)),net.meta.normalization.imageSize(1:2));
+        figure, imshow(img
+        % Step 3: Extract image features and predict label
+        feats = vl_simplenn(net, img(:,:,:,ii)) ;
+        imageFeatures(:) = squeeze(feats(end).x);
+        label = predict(classifier, imageFeatures);
+
+        % Step 4: Annotation
+        im = insertObjectAnnotation(im,'Rectangle',bboxes(ii,:),cellstr(label),'FontSize',40);
+
+    end
+end
+
+
