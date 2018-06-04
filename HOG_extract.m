@@ -10,12 +10,12 @@ minSetCount = min(tbl{:,2});
 imds = splitEachLabel(imds, minSetCount, 'randomize');
 
 %% Divide data into training and testing sets
-[trainingSet, testSet] = splitEachLabel(imds, 0.3, 'randomize');
+[trainingSet, testSet] = splitEachLabel(imds, 0.7, 'randomize');
 
 %% Extract HoG features from training set
 outputSize = [100 50];
-hogfeaturelength = 1980;
-cellsize = [8 8];
+hogfeaturelength = 3780;
+cellsize = [6 6];
 numImages = length(trainingSet.Files);
 trainingFeatures = zeros(numImages,hogfeaturelength,'single');
 
