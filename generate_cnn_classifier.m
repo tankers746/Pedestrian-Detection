@@ -25,10 +25,11 @@ minSetCount = min(tbl{:,2});
 imds = splitEachLabel(imds, minSetCount, 'randomize');
 
 %% Divide data into training and testing sets
-[trainingSet, testSet] = splitEachLabel(imds, 0.3, 'randomize');
+[trainingSet, testSet] = splitEachLabel(imds, 0.7, 'randomize');
 
 
-trainingFeatures = zeros(1000,length(trainingSet.Files));
+trainingFeatures = zeros(length(trainingSet.Files), 1000);
+trainingLabels = zeros(length(trainingSet.Labels), 1);
 for i = 1 : length(trainingSet.Files)
     waitbar (i/ length(trainingSet.Files));
      
@@ -40,10 +41,16 @@ for i = 1 : length(trainingSet.Files)
  
     % run the CNN to compute the features
     feats = vl_simplenn(net, im_) ;
-    trainingFeatures(:,i) = squeeze(feats(end).x);
+    trainingFeatures(i, :) = squeeze(feats(end).x);
+    if trainingSet.Labels(i) == 'positive'
+        trainingLabels(i) = 1;
+    else
+        trainingLabels(i) = 0;
+    end    
 end
 
-testFeatures = zeros(1000,length(testSet.Files));
+testFeatures = zeros(length(testSet.Files), 1000);
+testLabels = zeros(length(testSet.Labels), 1);
 for i = 1 : length(testSet.Files)
     waitbar (i/ length(testSet.Files));
      
@@ -55,23 +62,26 @@ for i = 1 : length(testSet.Files)
  
     % run the CNN to compute the features
     feats = vl_simplenn(net, im_) ;
-    testFeatures(:,i) = squeeze(feats(end).x);
+    testFeatures(i, :) = squeeze(feats(end).x);
+    if testSet.Labels(i) == 'positive'
+        testLabels(i) = 1;
+    else
+        testLabels(i) = 0;
+    end
 end
  
-%% Classifier training
-testLabels = testSet.Labels;
-trainingLabels = trainingSet.Labels;
  
-classifier = fitcecoc(trainingFeatures', trainingLabels); 
-predictedLabels = predict(classifier, testFeatures');
+classifier = svmtrain(trainingLabels, trainingFeatures, '-t 0 -b 1'); 
+[predict_label_L, accuracy_L, dec_values_L] = svmpredict(testLabels, testFeatures, classifier);
+
  
-confMat = confusionmat(testLabels, predictedLabels);
+%confMat = confusionmat(testLabels, predictedLabels);
  
 % Convert confusion matrix into percentage form
-confMat = bsxfun(@rdivide,confMat,sum(confMat,2))
+%confMat = bsxfun(@rdivide,confMat,sum(confMat,2))
  
 % Display the mean accuracy
-mean(diag(confMat))
+%mean(diag(confMat))
 
 %save classifier to disk
-save('classifier.mat','classifier');
+save('cnn_classifier.mat','classifier');
