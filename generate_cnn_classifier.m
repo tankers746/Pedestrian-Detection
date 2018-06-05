@@ -25,8 +25,8 @@ minSetCount = min(tbl{:,2});
 imds = splitEachLabel(imds, minSetCount, 'randomize');
 
 %% Divide data into training and testing sets
-[trainingSet, testSet] = splitEachLabel(imds, 0.7, 'randomize');
-
+%[trainingSet, testSet] = splitEachLabel(imds, 0.7, 'randomize');
+trainingSet = imds;
 
 trainingFeatures = zeros(length(trainingSet.Files), 1000);
 trainingLabels = zeros(length(trainingSet.Labels), 1);
@@ -49,6 +49,7 @@ for i = 1 : length(trainingSet.Files)
     end    
 end
 
+%{
 testFeatures = zeros(length(testSet.Files), 1000);
 testLabels = zeros(length(testSet.Labels), 1);
 for i = 1 : length(testSet.Files)
@@ -69,10 +70,10 @@ for i = 1 : length(testSet.Files)
         testLabels(i) = 0;
     end
 end
- 
+ %}
  
 classifier = svmtrain(trainingLabels, trainingFeatures, '-t 0 -b 1'); 
-[predict_label_L, accuracy_L, dec_values_L] = svmpredict(testLabels, testFeatures, classifier);
+%[predict_label_L, accuracy_L, dec_values_L] = svmpredict(testLabels, testFeatures, classifier);
 
  
 %confMat = confusionmat(testLabels, predictedLabels);
