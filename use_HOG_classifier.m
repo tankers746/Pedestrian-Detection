@@ -36,7 +36,7 @@ for hx = 1:Xoverlap:(Nx-sx)
 % extract HOG features from bounding box
         features = extractHOGFeatures(seg,'CellSize',cellsize);
         [label, score] = predict(classifier,features);
-        if (label == 'positive') && (abs(score(1)) > 0.65) && (abs(score(1)) < 1)
+        if (label == 'positive') && (abs(score(1)) > 0.) && (abs(score(1)) < 1)
 %                 rectangle('Position', [hx/scale hy/scale sx/scale sy/scale],...
 %                     'EdgeColor','g')
                 storage(n,1) = n;
