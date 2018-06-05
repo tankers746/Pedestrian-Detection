@@ -1,4 +1,4 @@
-clear,clc;
+clear;
 % load classifier
 load HOGclassifier
 %load image
@@ -36,22 +36,22 @@ for hx = 1:Xoverlap:(Nx-sx)
 % extract HOG features from bounding box
         features = extractHOGFeatures(seg,'CellSize',cellsize);
         [label, score] = predict(classifier,features);
-        if (label == 'positive') && (abs(score(1)) > 0.) && (abs(score(1)) < 1)
-%                 rectangle('Position', [hx/scale hy/scale sx/scale sy/scale],...
-%                     'EdgeColor','g')
+        if (label == 'positive') && (abs(score(1)) > 0.68) && (abs(score(1)) < 1)
+                rectangle('Position', [hx/scale hy/scale sx/scale sy/scale],...
+                    'EdgeColor','g')
                 storage(n,1) = n;
                 storage(n,2:3) = score;
                 storage(n,4:5) = [hx hy];
                 n = n + 1;
         end
     end
-    if storage ~= [0 0 0 0 0]
-    [M, I] = min(storage(:,2));
-    rectangle('Position',[storage(I,4)/scale storage(I,5)/scale sx/scale sy/scale],...
-        'EdgeColor','g')
-%     storage(I,:)
-    
-    end
+%     if storage ~= [0 0 0 0 0]
+%     [M, I] = min(storage(:,2));
+%     rectangle('Position',[storage(I,4)/scale storage(I,5)/scale sx/scale sy/scale],...
+%         'EdgeColor','g')
+% %     storage(I,:)
+%     
+%     end
     
 end
 
