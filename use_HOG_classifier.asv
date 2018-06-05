@@ -16,8 +16,8 @@ tic
 % classifier used
 sx = 50;
 sy = 100;
-Xoverlap = 12;
-Yoverlap = 15;
+Xoverlap = 10;
+Yoverlap = 16;
 % slide
 f1 = figure(1); clf;
 imshow(rgb); hold on
@@ -36,25 +36,22 @@ for hx = 1:Xoverlap:(Nx-sx)
 % extract HOG features from bounding box
         features = extractHOGFeatures(seg,'CellSize',cellsize);
         [label, score] = predict(classifier,features);
-        if (label == 'positive') && (abs(score(1)) > 0.65) && (abs(score(1)) < 1)
-%                 rectangle('Position', [hx/scale hy/scale sx/scale sy/scale],...
-%                     'EdgeColor','g')
+        if (label == 'positive') && (abs(score(1)) > 0.75) && (abs(score(1)) < 1)
+                %rectangle('Position', [hx/scale hy/scale sx/scale sy/scale],...
+                    %'EdgeColor','g')
                 storage(n,1) = n;
                 storage(n,2:3) = score;
                 storage(n,4:5) = [hx hy];
                 n = n + 1;
         end
     end
-    if storage ~= [0 0 0 0 0]
     [M, I] = min(storage(:,2));
-    rectangle('Position',[storage(I,4)/scale storage(I,5)/scale sx/scale sy/scale],...
+    rectangle('Position',[storage(I,4)]/scale storage(I,5)/scale sx/scale sy/scale],...
         'EdgeColor','g')
-%     storage(I,:)
-    
-    end
-    
+    storage = [0 0 0 0 0
 end
 
 %end
 toc
+storage
 % check confidence
