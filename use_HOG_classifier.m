@@ -1,6 +1,7 @@
 clear;
 % load classifier
 load hog_classifier
+addpath('./libsvm')
 %load image
 [FileName,FilePath ]= uigetfile({'*','All Files'});
 ExPath = fullfile(FilePath, FileName);
@@ -22,7 +23,8 @@ Yoverlap = 15;
 f1 = figure(1); clf;
 imshow(rgb); hold on
 
-storage = [0 0 0 0 0];
+bboxes = [0 0 0 0];
+scores = [0 0];
 n = 1;
 for sf = 0.5:0.1:1
     scaleFactor = 100/sf; % tune denominator for pedestrian height as a fraction of image height
@@ -38,8 +40,8 @@ for sf = 0.5:0.1:1
             [label, accuracy, prob] = svmpredict(0, double(features), classifier, '-b 1');
             if (label == 1)
                     bbox = [hx/scale hy/scale sx/scale sy/scale];
-                    storage(n,1:4) = bbox;
-                    storage(n,5) = prob(1);
+                    bboxes(n,1:4) = bbox;
+                    scores(n) = prob(1);
                     n = n + 1;
             end
         end
@@ -54,15 +56,15 @@ for sf = 0.5:0.1:1
     end
 end
 
-for i = 1: size(storage, 1)
-    rectangle('Position', storage(i,1:4),...
+for i = 1: size(bboxes, 1)
+    rectangle('Position', bboxes(i, 1:4),...
                         'EdgeColor','g')
 end
 
 figure; imshow(rgb); hold on
-[selectedBbox,selectedScore] = selectStrongestBbox(storage(:,1:4),storage(:,5), 'OverlapThreshold', 0.2); 
+[selectedBbox,selectedScore] = selectStrongestBbox(bboxes,scores(:), 'OverlapThreshold', 0.2); 
 for i = 1: size(selectedBbox, 1)
-    rectangle('Position', selectedBbox(i,:),...
+    rectangle('Position', selectedBbox(i, 1:4),...
                         'EdgeColor','g')
 end
 %end

@@ -52,7 +52,9 @@ function pedestrian_detection_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to pedestrian_detection (see VARARGIN)
 
-handles.output = hObject;
+% Choose default command line output for pedestrian_detection
+handles.classifier = load('.\hog_classifier.mat');
+
 
 % Update handles structure
 guidata(hObject, handles);
@@ -94,11 +96,11 @@ function pushbutton1_Callback(hObject, eventdata, handles)
         '*.PNG','PNG Files (*.PNG)'});
 
         filePath = fullfile(folder, file);
-        handles.rgb =  imread(filePath);  
+        handles.rgb = imread(filePath);
         handles.gray = rgb2gray(handles.rgb);
         guidata(hObject, handles);
         axes(handles.axes1); 
-        imshow(handles.rgb);
+        imshow(handles.rgb); hold on
         handles.axes1.YAxis.Visible = 'off';
         handles.axes1.XAxis.Visible = 'off'; 
     end
@@ -109,9 +111,6 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     tic
-    addpath('./libsvm')
-    load hog_classifier
-    
     cellsize = [6 6];
     [Oy,Ox] = size(handles.gray); % get original image size, for later
     % set sliding window size, must return a 50 by 100 segment for the HOG
@@ -136,7 +135,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
                 
                 % extract HOG features from bounding box
                 features = extractHOGFeatures(seg,'CellSize',cellsize);
-                [label, accuracy, prob] = svmpredict(0, double(features), classifier, '-b 1');
+                [label, accuracy, prob] = svmpredict(0, double(features), handles.classifier, '-b 1');
                 if (label == 1)
                         bbox = [hx/scale hy/scale sx/scale sy/scale];
                         bboxes(n,1:4) = bbox;
@@ -146,17 +145,15 @@ function pushbutton2_Callback(hObject, eventdata, handles)
             end
         end
     end
-    imshow(handles.rgb)
-    handles.axes1.YAxis.Visible = 'off';
-    handles.axes1.XAxis.Visible = 'off'; 
+
     [selectedBbox,selectedScore] = selectStrongestBbox(bboxes,scores(:), 'OverlapThreshold', 0.2); 
     for i = 1: size(selectedBbox, 1)
         rectangle('Position', selectedBbox(i, 1:4),...
                             'EdgeColor','g')
-        text(selectedBbox(i, 1), selectedBbox(i, 2)-20, num2str(selectedScore(i)), 'Color', 'g', 'FontWeight', 'bold', 'FontSize', 14)
     end
-    set(handles.text4,'String',toc);
+    set(handles.text4,'Value',toc);
     guidata(hObject, handles);
+
 
 
 
