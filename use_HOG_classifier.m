@@ -2,13 +2,14 @@ clear;
 % load classifier
 load hog_classifier
 addpath('./libsvm')
+run('./vlfeat/toolbox/vl_setup');
 %load image
 [FileName,FilePath ]= uigetfile({'*','All Files'});
 ExPath = fullfile(FilePath, FileName);
 rgb = imread(ExPath);
 im = rgb2gray(rgb);
 
-cellsize = [6 6];
+cellsize = 6;
 
 [Oy,Ox] = size(im); % get original image size, for later
 
@@ -35,8 +36,10 @@ for sf = 0.5:0.1:1
     for hx = 1:Xoverlap:(Nx-sx)
         for hy = 1:Yoverlap:(Ny-sy)
             seg=im2(hy:(hy+sy-1),hx:(hx+sx-1));
+            seg=single(seg);
     % extract HOG features from bounding box
-            features = extractHOGFeatures(seg,'CellSize',cellsize);
+            features = vl_hog(seg, cellsize);
+            features = reshape(features, [], size(features,4))' ;
             [label, accuracy, prob] = svmpredict(0, double(features), classifier, '-b 1');
             if (label == 1)
                     bbox = [hx/scale hy/scale sx/scale sy/scale];

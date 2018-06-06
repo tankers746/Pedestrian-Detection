@@ -111,8 +111,9 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     tic
     addpath('./libsvm')
     load hog_classifier
+    run('./vlfeat/toolbox/vl_setup');
     
-    cellsize = [6 6];
+    cellsize = 6;
     [Oy,Ox] = size(handles.gray); % get original image size, for later
     % set sliding window size, must return a 50 by 100 segment for the HOG
     % classifier used
@@ -133,9 +134,10 @@ function pushbutton2_Callback(hObject, eventdata, handles)
         for hx = 1:Xoverlap:(Nx-sx)
             for hy = 1:Yoverlap:(Ny-sy)
                 seg=im2(hy:(hy+sy-1),hx:(hx+sx-1));
-                
+                seg=single(seg);
                 % extract HOG features from bounding box
-                features = extractHOGFeatures(seg,'CellSize',cellsize);
+                features = vl_hog(seg, cellsize);
+                features = reshape(features, [], size(features,4))' ;
                 [label, accuracy, prob] = svmpredict(0, double(features), classifier, '-b 1');
                 if (label == 1)
                         bbox = [hx/scale hy/scale sx/scale sy/scale];

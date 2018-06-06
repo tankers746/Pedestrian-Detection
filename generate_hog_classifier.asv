@@ -60,8 +60,8 @@ end
 %}
 
 hog_features = cat(4, trainingFeatures{:}) ;
-hog_features = reshape(hog_features, [], size(hog_features,4))' ;
-classifier = svmtrain(trainingLabels, double(hog_features), '-t 0 -b 1'); 
+hog_features = reshape(hog_features, [], size(hog_features,4)) ;
+classifier = svmtrain(trainingLabels(:), double(hog_features), '-t 0 -b 1'); 
 %[predict_label_L, accuracy_L, dec_values_L] = svmpredict(testLabels, testFeatures, classifier);
 
 %save classifier to disk
