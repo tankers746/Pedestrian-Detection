@@ -125,7 +125,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     bboxes = [0 0 0 0];
     scores = [0 0];
     n = 1;
-    for sf = 0.5:0.1:1
+    for sf = 0.4:0.2:1
         scaleFactor = 100/sf; % tune denominator for pedestrian height as a fraction of image height
         scale = scaleFactor/Oy;
         im2 = imresize(handles.gray, scale);
@@ -139,7 +139,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
                 features = vl_hog(seg, cellsize);
                 features = reshape(features, [], size(features,4))' ;
                 [label, accuracy, prob] = svmpredict(0, double(features), classifier, '-b 1');
-                if (label == 1)
+                if (label == 1 & prob(1) > 0.85)
                         bbox = [hx/scale hy/scale sx/scale sy/scale];
                         bboxes(n,1:4) = bbox;
                         scores(n) = prob(1);
@@ -151,7 +151,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     imshow(handles.rgb)
     handles.axes1.YAxis.Visible = 'off';
     handles.axes1.XAxis.Visible = 'off'; 
-    [selectedBbox,selectedScore] = selectStrongestBbox(bboxes,scores(:), 'OverlapThreshold', 0.2); 
+    [selectedBbox,selectedScore] = selectStrongestBbox(bboxes,scores(:), 'OverlapThreshold', 0.1); 
     for i = 1: size(selectedBbox, 1)
         rectangle('Position', selectedBbox(i, 1:4),...
                             'EdgeColor','g')
