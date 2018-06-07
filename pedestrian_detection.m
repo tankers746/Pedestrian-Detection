@@ -53,7 +53,8 @@ function pedestrian_detection_OpeningFcn(hObject, eventdata, handles, varargin)
 % varargin   command line arguments to pedestrian_detection (see VARARGIN)
 
 handles.output = hObject;
-
+run('./vlfeat/toolbox/vl_setup');
+addpath('./libsvm');
 % Update handles structure
 guidata(hObject, handles);
 
@@ -109,38 +110,37 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     tic
-    addpath('./libsvm')
     load hog_classifier
-    run('./vlfeat/toolbox/vl_setup');
-    
     cellsize = 6;
     [Oy,Ox] = size(handles.gray); % get original image size, for later
     % set sliding window size, must return a 50 by 100 segment for the HOG
     % classifier used
     sx = 50;
     sy = 100;
-    Xoverlap = 12;
-    Yoverlap = 15;
+    Xoverlap = 24;
+    Yoverlap = 30;
 
     bboxes = [0 0 0 0];
     scores = [0 0];
     n = 1;
-    for sf = 0.4:0.2:1
+    for sf = 0.4:0.4:0.8
         scaleFactor = 100/sf; % tune denominator for pedestrian height as a fraction of image height
         scale = scaleFactor/Oy;
         im2 = imresize(handles.gray, scale);
         [Ny,Nx] = size(im2); % new image sizes
-
-        for hx = 1:Xoverlap:(Nx-sx)
-            for hy = 1:Yoverlap:(Ny-sy)
+        
+        x_step = round(scale * Xoverlap);
+        y_step = round(scale * Yoverlap);
+        for hx = 1:x_step:(Nx-sx)
+            for hy = 1:y_step:(Ny-sy)
                 seg=im2(hy:(hy+sy-1),hx:(hx+sx-1));
                 seg=single(seg);
                 % extract HOG features from bounding box
                 features = vl_hog(seg, cellsize);
                 features = reshape(features, [], size(features,4))' ;
-                [label, accuracy, prob] = svmpredict(0, double(features), classifier, '-b 1');
-                if (label == 1 & prob(1) > 0.85)
-                        bbox = [hx/scale hy/scale sx/scale sy/scale];
+                [label, accuracy, prob] = svmpredict(0, double(features), classifier, '-b 1 -q');
+                if (label == 1 & prob(1) > 0.7)
+                        bbox = [hx/scale hy/scale (hx+sx)/scale (hy+sy)/scale];
                         bboxes(n,1:4) = bbox;
                         scores(n) = prob(1);
                         n = n + 1;
@@ -151,11 +151,15 @@ function pushbutton2_Callback(hObject, eventdata, handles)
     imshow(handles.rgb)
     handles.axes1.YAxis.Visible = 'off';
     handles.axes1.XAxis.Visible = 'off'; 
-    [selectedBbox,selectedScore] = selectStrongestBbox(bboxes,scores(:), 'OverlapThreshold', 0.1); 
-    for i = 1: size(selectedBbox, 1)
-        rectangle('Position', selectedBbox(i, 1:4),...
-                            'EdgeColor','g')
-        text(selectedBbox(i, 1), selectedBbox(i, 2)-20, num2str(selectedScore(i)), 'Color', 'g', 'FontWeight', 'bold', 'FontSize', 14)
+    try
+        [validBboxes] = non_max_supr_bbox(bboxes, scores(:), [Oy,Ox]); 
+        for i = 1: size(bboxes, 1)
+            if validBboxes(i) == 1
+                bbox = [ bboxes(i, 1:2), bboxes(i, 3) - bboxes(i, 1), bboxes(i, 4) - bboxes(i, 2)];
+                rectangle('Position', bbox, 'EdgeColor','g')
+                text(bbox(1), bbox(2)-20, num2str(scores(i)), 'Color', 'g', 'FontWeight', 'bold', 'FontSize', 14)
+            end
+        end
     end
     set(handles.text4,'String',toc);
     guidata(hObject, handles);

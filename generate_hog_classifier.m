@@ -7,13 +7,7 @@ run('./vlfeat/toolbox/vl_setup');
 %% Set up image data
 categories = {'positive', 'negative'};
 imds = imageDatastore(fullfile('.\', categories), 'LabelSource', 'foldernames');
-tbl = countEachLabel(imds);
 
-%% Use the smallest overlap set
-minSetCount = min(tbl{:,2});
-
-% Use splitEachLabel method to trim the set.
-imds = splitEachLabel(imds, minSetCount, 'randomize');
 
 %% Divide data into training and testing sets
 %[trainingSet, testSet] = splitEachLabel(imds, 0, 'randomize');
@@ -29,7 +23,7 @@ cellsize = 6;
 trainingFeatures = {};
 trainingLabels = zeros(length(trainingSet.Labels), 1);
 for i = 1:length(trainingSet.Files)
-    waitbar (i/ length(trainingSet.Files));
+    h = waitbar (i/ length(trainingSet.Files));
     img = readimage(trainingSet, i);
     if(size(img,3)==3)
         img = rgb2gray(img);
@@ -41,8 +35,8 @@ for i = 1:length(trainingSet.Files)
     else
         trainingLabels(i) = 0;
     end
+    
 end
-
 %% Extract HoG Features from test set
 %{
 testFeatures = double(zeros(length(testSet.Files), hogfeaturelength,'single'));
@@ -61,8 +55,9 @@ end
 
 hog_features = cat(4, trainingFeatures{:}) ;
 hog_features = reshape(hog_features, [], size(hog_features,4))' ;
-classifier = svmtrain(trainingLabels, double(hog_features), '-t 0 -b 1'); 
+classifier = svmtrain(trainingLabels, double(hog_features), '-t 0 -b 1 -q'); 
 %[predict_label_L, accuracy_L, dec_values_L] = svmpredict(testLabels, testFeatures, classifier);
 
 %save classifier to disk
 save('hog_classifier.mat','classifier');
+close(h);
